@@ -1,35 +1,38 @@
----
-- name: Baseline no Ubuntu Desktop
+- name: Baseline do node
   hosts: desktop
   become: true
-  gather_facts: yes
 
-
-tasks:
-    - name: Forçar APT IPv4 (evita erro em NAT)
-      copy:
-        dest: /etc/apt/apt.conf.d/99force-ipv4
-        content: 'Acquire::ForceIPv4 "true";'
-        owner: root
-        group: root
-        mode: '0644'
-
-    - name: Atualizar cache APT
+  tasks:
+    - name: Atualizar pacotes apt
       apt:
         update_cache: yes
-        cache_valid_time: 3600
+        upgrade: dist
 
-    - name: Instalar utilitários úteis
+    - name: Instalar utilitários básicos
       apt:
         name:
           - curl
-          - htop
+          - vim
           - net-tools
-          - traceroute
+          - htop
         state: present
 
-    - name: Garantir timesyncd ativo
+    - name: Garantir que IPv4 é preferido
+      lineinfile:
+        path: /etc/gai.conf
+        regexp: '^#?precedence ::ffff:0:0/96'
+        line: 'precedence ::ffff:0:0/96  100'
+        state: present
+      notify: Restart networking
+
+    - name: Ativar sincronização de tempo
       service:
         name: systemd-timesyncd
         state: started
         enabled: yes
+
+  handlers:
+    - name: Restart networking
+      service:
+        name: systemd-networkd
+        state: restarted
