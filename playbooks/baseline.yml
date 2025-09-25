@@ -1,0 +1,35 @@
+---
+- name: Baseline no Ubuntu Desktop
+  hosts: desktop
+  become: true
+  gather_facts: yes
+
+
+tasks:
+    - name: Forçar APT IPv4 (evita erro em NAT)
+      copy:
+        dest: /etc/apt/apt.conf.d/99force-ipv4
+        content: 'Acquire::ForceIPv4 "true";'
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Atualizar cache APT
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Instalar utilitários úteis
+      apt:
+        name:
+          - curl
+          - htop
+          - net-tools
+          - traceroute
+        state: present
+
+    - name: Garantir timesyncd ativo
+      service:
+        name: systemd-timesyncd
+        state: started
+        enabled: yes
