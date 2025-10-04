@@ -1,0 +1,53 @@
+---
+- name: Configurar utilizador administrador com acesso SSH por chave pública
+  hosts: all
+  become: yes
+  vars:
+    admin_user: admin_isptec
+    admin_key: |
+      ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDvWVML0odsXVvvqrbj7GTjPO0LGxwBtnwd/g6cJ/NrVeCMPext56i7BQ0E4wZ+TucUaDy5z7THMv4k4a1A7E6dZTeC5JFTC7/zvvhebpVjKhf0KF6yloAIj2xBYSX5I0hDpvWTB3x7r9B6toksjn3LmvP6o39mmEM/cKWnVGxjotZa/aoUzDbA4p0KC9IWufu9nGPkK4vItCyBeWsg7KHa/3gk0XSmvb08DkOMaVtPJH8FDUOl0EruKFF7dCCPY19qd2Gu0XsWa3/HonQvBVLcPswm9EbR58XLR357Dy0Jt7ynT3JL100YqZOjAiRtsiWPTHYmqLX8eK/n1ZFRBOceF+RpZjVPSc7QjGw1yLUQOg+Ay0Si1K6LwMuMrZVEFjoiDIo+LE8GzBNRUJuvvgPX/nD3dIUgeTMgT/nenM7GgWT6nhGt9srXa1/HuMtDM9awKgZkixwQj6V8ImrwTC2e/4FOWJ/ztHPqdYgPhd5SaYBvqWNuY0dp1FjuVXHyfT5WbbXhe4pGpKrbTiudm5PdXjyKwXBaGMIF7rJYfTFwPG1QDP/dnP+bWKg0BGSEEoN0lw4tMm1yCjIX2crL07GY/7A4i4VsS8ZUFgRVr0EyK2reDTzwyLQiNkdkNyyFlArASkQ4zc2xnEkmRQb9kbF1u0bV/Akyk4cyVAtXIBY2fw== elber@ubuntu-servertcc
+
+  tasks:
+    - name: Criar utilizador admin_isptec
+      user:
+        name: "{{ admin_user }}"
+        comment: "Administrador ISPTEC"
+        shell: /bin/bash
+        groups: sudo
+        append: yes
+        create_home: yes
+
+    - name: Criar diretório .ssh
+      file:
+        path: "/home/{{ admin_user }}/.ssh"
+        state: directory
+        owner: "{{ admin_user }}"
+        group: "{{ admin_user }}"
+        mode: '0700'
+
+    - name: Adicionar chave pública autorizada
+      copy:
+        dest: "/home/{{ admin_user }}/.ssh/authorized_keys"
+        content: "{{ admin_key }}"
+        owner: "{{ admin_user }}"
+        group: "{{ admin_user }}"
+        mode: '0600'
+
+    - name: Permitir login SSH por chave pública no servidor
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication'
+        line: 'PasswordAuthentication yes'
+
+    - name: Ativar AuthorizedKeysFile no SSHD
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?AuthorizedKeysFile'
+        line: 'AuthorizedKeysFile .ssh/authorized_keys'
+
+    - name: Reiniciar serviço SSH para aplicar alterações
+      service:
+        name: ssh
+        state: restarted
+
+
