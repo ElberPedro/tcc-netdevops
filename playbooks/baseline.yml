@@ -1,5 +1,5 @@
 - name: Baseline do node
-  hosts: desktop
+  hosts: desktops,servers
   become: true
 
   tasks:
