@@ -1,0 +1,26 @@
+# --- Contexto padrão ISPTEC ---
+timezone: "Africa/Luanda"
+
+packages_common: [vim, curl, htop, net-tools, unzip, git]
+
+# Conta administrativa padronizada
+admin_user: "admin_isptec"
+admin_pubkeys:
+  - "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+
+# Política SSH (muda para false na 2ª fase)
+ssh_password_auth: true
+ssh_permit_root_login: "no"
+
+# Firewall (abre só o necessário)
+ufw_allow_tcp: ["22"]
+
+# Zabbix
+zabbix_server_ip: "192.168.109.132"
+
+# Backups
+backup_server: "192.168.109.132"
+backup_share: "/srv/backup"
+backup_paths: ["/etc", "/home"]
+backup_excludes: ["/home/*/.cache"]
+backup_schedule: "0 2 * * *"   # 02:00 diários

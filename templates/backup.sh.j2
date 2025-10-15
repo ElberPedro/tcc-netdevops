@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+DEST="{{ backup_server }}:{{ backup_share }}/$(hostname -s)"
+EXCLUDES_FILE="/etc/rsync_excludes.txt"
+
+cat > "$EXCLUDES_FILE" <<EOF
+{% for p in backup_excludes %}{{ p }}
+{% endfor %}EOF
+
+for SRC in {% for p in backup_paths %}{{ p }} {% endfor %}; do
+  rsync -aHAX --delete --numeric-ids --exclude-from="$EXCLUDES_FILE" "$SRC" "root@${DEST}/"
+done
+

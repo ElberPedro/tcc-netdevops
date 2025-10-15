@@ -1,0 +1,23 @@
+- name: Garantir utilizador administrativo padrão
+  ansible.builtin.user:
+    name: "{{ admin_user }}"
+    shell: /bin/bash
+    create_home: yes
+    groups: sudo
+    append: yes
+  tags: [utilizadores]
+
+- name: Autorizar chaves públicas do admin
+  ansible.posix.authorized_key:
+    user: "{{ admin_user }}"
+    state: present
+    key: "{{ item }}"
+  loop: "{{ admin_pubkeys }}"
+  tags: [utilizadores, ssh]
+
+- name: Sudo NOPASSWD (automação sem prompts)
+  ansible.builtin.copy:
+    dest: "/etc/sudoers.d/{{ admin_user }}"
+    content: "{{ admin_user }} ALL=(ALL) NOPASSWD:ALL\n"
+    mode: "0440"
+  tags: [utilizadores, sudo]

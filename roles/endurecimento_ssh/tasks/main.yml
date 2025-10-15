@@ -1,0 +1,16 @@
+- name: Aplicar política de SSH padronizada
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^{{ item.key }}'
+    line: '{{ item.key }} {{ item.value }}'
+    create: no
+    backrefs: false
+  loop:
+    - { key: 'PubkeyAuthentication',      value: 'yes' }
+    - { key: 'PasswordAuthentication',    value: '{{ "yes" if ssh_password_auth else "no" }}' }
+    - { key: 'PermitRootLogin',           value: '{{ ssh_permit_root_login }}' }
+    - { key: 'X11Forwarding',             value: 'no' }
+    - { key: 'ChallengeResponseAuthentication', value: 'no' }
+    - { key: 'UsePAM',                    value: 'yes' }
+  notify: Reiniciar ssh
+  tags: [ssh, hardening]

@@ -1,0 +1,14 @@
+- hosts: all
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Ping
+      ansible.builtin.ping:
+
+    - name: Uptime
+      ansible.builtin.command: uptime
+      register: up
+
+    - name: Mostrar uptime
+      ansible.builtin.debug:
+        var: up.stdout

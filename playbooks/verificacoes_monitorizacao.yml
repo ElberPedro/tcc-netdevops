@@ -1,0 +1,39 @@
+- hosts: all
+  become: true
+  gather_facts: false
+
+  vars:
+    zabbix_server_ip: "192.168.109.132"
+
+  tasks:
+    - name: zabbix-agent ativo e enabled
+      ansible.builtin.service:
+        name: zabbix-agent
+        state: started
+        enabled: yes
+      register: zbx_service
+
+    - name: Mostrar estado detalhado do serviço (para evidências)
+      ansible.builtin.debug:
+        var: zbx_service
+
+    - name: Ler linha Server= do zabbix_agentd.conf
+      ansible.builtin.shell: "grep -E '^Server=' /etc/zabbix/zabbix_agentd.conf | sed 's/^Server=//'"
+      register: zbx_server_line
+      changed_when: false
+
+    - name: Validar que Server= contém o IP do Zabbix
+      ansible.builtin.assert:
+        that:
+          - "zabbix_server_ip in zbx_server_line.stdout"
+        success_msg: "OK: Server= contém {{ zabbix_server_ip }}"
+        fail_msg: "NOK: Server= não contém {{ zabbix_server_ip }} (atual: {{ zbx_server_line.stdout | default('vazio') }})"
+
+    - name: Porta 10050 a escutar (TCP) — apenas verifica
+      ansible.builtin.shell: "ss -ltn | grep ':10050' || true"
+      register: zbx_port
+      changed_when: false
+
+    - name: Mostrar verificação da porta (para evidências)
+      ansible.builtin.debug:
+        var: zbx_port.stdout

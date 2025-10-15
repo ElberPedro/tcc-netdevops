@@ -1,0 +1,18 @@
+- name: Definir timezone (padronização)
+  ansible.builtin.timezone:
+    name: "{{ timezone }}"
+  tags: [padronizacao, timezone]
+
+- name: Instalar pacotes base padronizados
+  ansible.builtin.apt:
+    name: "{{ packages_common }}"
+    state: present
+    update_cache: yes
+  tags: [padronizacao, pacotes]
+
+- name: Garantir NTP ativo (chrony)
+  ansible.builtin.service:
+    name: chrony
+    state: started
+    enabled: true
+  tags: [ntp, padronizacao]
